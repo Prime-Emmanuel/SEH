@@ -825,48 +825,84 @@ const PropertyForm = ({ onSuccess, onCancel, isAdmin = false, initialData }: { o
     setPreviews([URL.createObjectURL(file)]);
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const result = await analyzeImageWithAI(reader.result as string, file.type);
-          if (result) {
-            setFormData(prev => {
-              const newSurface = result.surface ? Number(result.surface) : prev.surface;
-              let newPricePerM2 = prev.pricePerM2;
-              
-              if (result.totalPrice && newSurface > 0) {
-                newPricePerM2 = Math.round(Number(result.totalPrice) / newSurface);
-              }
-
-              return {
-                ...prev,
-                type: result.type || prev.type,
-                title: result.title || prev.title,
-                description: result.description || prev.description,
-                characteristics: result.characteristics || prev.characteristics,
-                city: result.city || prev.city,
-                quarter: result.quarter || prev.quarter,
-                surface: newSurface,
-                pricePerM2: newPricePerM2,
-                ownerName: result.ownerName || prev.ownerName,
-                ownerPhone: result.ownerPhone || prev.ownerPhone,
-                ownerEmail: result.ownerEmail || prev.ownerEmail,
-              };
-            });
-            toast.success("Image analysée par l'IA avec succès!");
-          }
-        } catch (error: any) {
-          console.error(error);
-          toast.error("Erreur IA: " + (error?.message || "Impossible d'analyser l'image. Vérifiez votre clé API dans les paramètres."));
-        } finally {
-          setAnalyzingImage(false);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Resize very large images to avoid API limits hanging the browser
+        const maxDim = 1200;
+        if (width > height && width > maxDim) {
+          height *= maxDim / width;
+          width = maxDim;
+        } else if (height > maxDim) {
+          width *= maxDim / height;
+          height = maxDim;
         }
+        
+        canvas.width = Math.round(width);
+        canvas.height = Math.round(height);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          setAnalyzingImage(false);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        
+        analyzeImageWithAI(compressedDataUrl, 'image/jpeg')
+          .then(result => {
+            if (result) {
+              setFormData(prev => {
+                const newSurface = result.surface ? Number(result.surface) : prev.surface;
+                let newPricePerM2 = prev.pricePerM2;
+                
+                if (result.totalPrice && newSurface > 0) {
+                  newPricePerM2 = Math.round(Number(result.totalPrice) / newSurface);
+                }
+
+                return {
+                  ...prev,
+                  type: result.type || prev.type,
+                  title: result.title || prev.title,
+                  description: result.description || prev.description,
+                  characteristics: result.characteristics || prev.characteristics,
+                  city: result.city || prev.city,
+                  quarter: result.quarter || prev.quarter,
+                  surface: newSurface,
+                  pricePerM2: newPricePerM2,
+                  ownerName: result.ownerName || prev.ownerName,
+                  ownerPhone: result.ownerPhone || prev.ownerPhone,
+                  ownerEmail: result.ownerEmail || prev.ownerEmail,
+                };
+              });
+              toast.success("Image analysée par l'IA avec succès!");
+            }
+          })
+          .catch((error: any) => {
+            console.error(error);
+            toast.error("Erreur IA: " + (error?.message || "Impossible d'analyser l'image."));
+          })
+          .finally(() => {
+            setAnalyzingImage(false);
+          });
       };
-      reader.readAsDataURL(file);
+      
+      img.onerror = () => {
+        toast.error("Format d'image non supporté ou image corrompue");
+        setAnalyzingImage(false);
+      };
+      
+      img.src = URL.createObjectURL(file);
     } catch (error) {
       setAnalyzingImage(false);
       toast.error("Erreur de lecture de l'image.");
     }
+    
+    // Reset file input so same file can be uploaded again if needed
+    e.target.value = '';
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -54,8 +54,9 @@ Ne retourne QUE du JSON sans markdown, strictement. Laisse null ou une chaine vi
       }
     });
 
-    const text = response.text;
+    let text = response.text;
     if (!text) return null;
+    text = text.replace(/```json\n?/g, '').replace(/\n?```/g, '').trim();
     return JSON.parse(text);
   } catch (error: any) {
     if (retries > 0 && error?.status === 503) {
@@ -64,7 +65,7 @@ Ne retourne QUE du JSON sans markdown, strictement. Laisse null ou une chaine vi
       return analyzeImageWithAI(base64Image, mimeType, retries - 1);
     }
     console.error("Erreur lors de l'analyse d'image avec Gemini:", error);
-    throw new Error(error?.status === 503 ? "L'IA est actuellement surchargée (forte demande). Veuillez réessayer dans quelques instants." : "Impossible d'analyser l'image. Vérifiez votre clé API.");
+    throw new Error(error?.status === 503 ? "L'IA est actuellement surchargée (forte demande). Veuillez réessayer dans quelques instants." : "Impossible d'analyser l'image. Vérifiez votre clé API ou essayez une autre image.");
   }
 };
 export const generateDescriptionWithAI = async (prompt: string, retries = 2): Promise<string> => {
