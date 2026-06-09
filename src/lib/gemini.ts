@@ -12,7 +12,9 @@ export const getGeminiClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-export const analyzeImageWithAI = async (base64Image: string, mimeType: string): Promise<any> => {
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export const analyzeImageWithAI = async (base64Image: string, mimeType: string, retries = 2): Promise<any> => {
   try {
     const client = getGeminiClient();
     
@@ -20,7 +22,7 @@ export const analyzeImageWithAI = async (base64Image: string, mimeType: string):
     const pureBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
     const response = await client.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       contents: {
         parts: [
           {
@@ -55,16 +57,21 @@ Ne retourne QUE du JSON sans markdown, strictement. Laisse null ou une chaine vi
     const text = response.text;
     if (!text) return null;
     return JSON.parse(text);
-  } catch (error) {
+  } catch (error: any) {
+    if (retries > 0 && error?.status === 503) {
+      console.warn("Gemini API overloaded, retrying in 2 seconds...");
+      await sleep(2000);
+      return analyzeImageWithAI(base64Image, mimeType, retries - 1);
+    }
     console.error("Erreur lors de l'analyse d'image avec Gemini:", error);
-    throw error;
+    throw new Error(error?.status === 503 ? "L'IA est actuellement surchargée (forte demande). Veuillez réessayer dans quelques instants." : "Impossible d'analyser l'image. Vérifiez votre clé API.");
   }
 };
-export const generateDescriptionWithAI = async (prompt: string): Promise<string> => {
+export const generateDescriptionWithAI = async (prompt: string, retries = 2): Promise<string> => {
   try {
     const client = getGeminiClient();
     const response = await client.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       contents: prompt,
       config: {
         systemInstruction: "Tu es un agent immobilier expert. Génère une description professionnelle et attractive pour cette propriété en français."
@@ -72,8 +79,13 @@ export const generateDescriptionWithAI = async (prompt: string): Promise<string>
     });
 
     return response.text || "";
-  } catch (error) {
+  } catch (error: any) {
+    if (retries > 0 && error?.status === 503) {
+      console.warn("Gemini API overloaded, retrying in 2 seconds...");
+      await sleep(2000);
+      return generateDescriptionWithAI(prompt, retries - 1);
+    }
     console.error("Erreur lors de la génération avec Gemini:", error);
-    throw error;
+    throw new Error(error?.status === 503 ? "L'IA est actuellement surchargée (forte demande). Veuillez réessayer dans quelques instants." : "Erreur de génération.");
   }
 };
