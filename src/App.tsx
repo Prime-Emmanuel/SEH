@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-// import { GoogleGenAI, Type } from "@google/genai";
+import { analyzeImageWithAI } from './lib/gemini';
 import { 
   Home, 
   PlusCircle, 
@@ -812,7 +812,44 @@ const PropertyForm = ({ onSuccess, onCancel, isAdmin = false, initialData }: { o
   const commissionAmount = totalPrice * (formData.commission / 100);
 
   const handleAIImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    toast.error("L'analyse par l'IA est désactivée en mode serverless (nécessite un backend sécurisé pour Gemini API).");
+    if (!localStorage.getItem('gemini_api_key')) {
+      toast.error("Clé API IA non configurée. Veuillez l'ajouter dans l'onglet Paramètres IA du panel administrateur.");
+      return;
+    }
+
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAnalyzingImage(true);
+    setImages([file]);
+    setPreviews([URL.createObjectURL(file)]);
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const result = await analyzeImageWithAI(reader.result as string, file.type);
+          if (result) {
+            setFormData(prev => ({
+              ...prev,
+              type: result.type || prev.type,
+              title: result.title || prev.title,
+              description: result.description || prev.description,
+              characteristics: result.characteristics || prev.characteristics
+            }));
+            toast.success("Image analysée par l'IA avec succès!");
+          }
+        } catch (error) {
+          toast.error("Erreur Gemini: Impossible d'analyser l'image.");
+        } finally {
+          setAnalyzingImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      setAnalyzingImage(false);
+      toast.error("Erreur de lecture de l'image.");
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1962,6 +1999,7 @@ const AdminPanel = ({
             { id: 'create-offer', label: 'Créer une offre', icon: PlusCircle },
             { id: 'requests', label: 'Demandes', icon: Mail },
             { id: 'database', label: 'Connecteurs DB', icon: Database },
+            { id: 'settings', label: 'Paramètres AI', icon: Sparkles },
           ].map((item) => (
             <button 
               key={item.id}
@@ -2467,6 +2505,63 @@ const AdminPanel = ({
                       className="w-full h-12 rounded-xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
                     >
                       Tester la connexion
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-8">
+            <div className="grid grid-cols-1 gap-8">
+              <Card className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="p-8 border-b border-slate-100">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-gold" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-black text-slate-900 uppercase tracking-tight font-space">Paramètres IA (Gemini)</CardTitle>
+                      <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configuration locale (Navigateur)</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-600">
+                      Pour utiliser les fonctionnalités d'analyse d'images par l'IA sans serveur backend, veuillez entrer votre clé d'API Gemini. <br/>
+                      <span className="font-bold text-rose-500">Note:</span> Cette clé sera stockée localement dans votre navigateur (localStorage) de manière sécurisée et ne sera pas exposée publiquement aux autres utilisateurs.
+                    </p>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Clé API Google Gemini</label>
+                      <input
+                        type="password"
+                        placeholder="AIzaSy..."
+                        className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 focus:border-gold outline-none transition-all font-mono text-gray-700 text-sm"
+                        defaultValue={localStorage.getItem('gemini_api_key') || ''}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            localStorage.setItem('gemini_api_key', e.target.value);
+                          } else {
+                            localStorage.removeItem('gemini_api_key');
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="pt-6 border-t border-slate-100">
+                    <Button 
+                      onClick={() => {
+                        if (localStorage.getItem('gemini_api_key')) {
+                          toast.success("Clé API enregistrée localement avec succès !");
+                        } else {
+                          toast.error("Clé API supprimée.");
+                        }
+                      }}
+                      className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg"
+                    >
+                      Enregistrer
                     </Button>
                   </div>
                 </CardContent>
