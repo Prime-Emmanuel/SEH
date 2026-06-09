@@ -64,8 +64,9 @@ Ne retourne QUE du JSON sans markdown, strictement. Laisse null ou une chaine vi
       await sleep(2000);
       return analyzeImageWithAI(base64Image, mimeType, retries - 1);
     }
-    console.error("Erreur lors de l'analyse d'image avec Gemini:", error);
-    throw new Error(error?.status === 503 ? "L'IA est actuellement surchargée (forte demande). Veuillez réessayer dans quelques instants." : "Impossible d'analyser l'image. Vérifiez votre clé API ou essayez une autre image.");
+    console.error("Erreur complète de l'analyse d'image:", error);
+    const errorMessage = error?.message || error?.toString() || "Erreur inconnue";
+    throw new Error(error?.status === 503 ? "L'IA est actuellement surchargée (forte demande). Veuillez réessayer dans quelques instants." : `Erreur IA: ${errorMessage}`);
   }
 };
 export const generateDescriptionWithAI = async (prompt: string, retries = 2): Promise<string> => {
