@@ -839,8 +839,9 @@ const PropertyForm = ({ onSuccess, onCancel, isAdmin = false, initialData }: { o
             }));
             toast.success("Image analysée par l'IA avec succès!");
           }
-        } catch (error) {
-          toast.error("Erreur Gemini: Impossible d'analyser l'image.");
+        } catch (error: any) {
+          console.error(error);
+          toast.error("Erreur IA: " + (error?.message || "Impossible d'analyser l'image. Vérifiez votre clé API dans les paramètres."));
         } finally {
           setAnalyzingImage(false);
         }

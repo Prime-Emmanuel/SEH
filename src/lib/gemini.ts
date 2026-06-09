@@ -20,16 +20,20 @@ export const analyzeImageWithAI = async (base64Image: string, mimeType: string):
     const pureBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
     const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [
-        {
-          inlineData: {
-            mimeType: mimeType,
-            data: pureBase64,
+      model: "gemini-2.5-flash",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: pureBase64,
+            }
+          },
+          {
+            text: "Analyse cette image de propriété immobilière. Retourne un objet JSON stricte avec: 'type' (ex: Terrain, Maison, Appartement), 'title' (un titre court et accrocheur), 'description' (une description attractive), 'characteristics' (un tableau de 3-4 caractéristiques clés). Ne retourne QUE du JSON."
           }
-        },
-        "Analyse cette image de propriété immobilière. Retourne un objet JSON stricte avec: 'type' (ex: Terrain, Maison, Appartement), 'title' (un titre court et accrocheur), 'description' (une description attractive), 'characteristics' (un tableau de 3-4 caractéristiques clés). Ne retourne QUE du JSON."
-      ],
+        ]
+      },
       config: {
         responseMimeType: "application/json"
       }
@@ -47,7 +51,7 @@ export const generateDescriptionWithAI = async (prompt: string): Promise<string>
   try {
     const client = getGeminiClient();
     const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         systemInstruction: "Tu es un agent immobilier expert. Génère une description professionnelle et attractive pour cette propriété en français."
