@@ -1,0 +1,63 @@
+981-
+982-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+983-    if (e.target.files) {
+984-      const newFiles = Array.from(e.target.files);
+985-      setImages(prev => [...prev, ...newFiles]);
+986-      const newPreviews = newFiles.map(file => URL.createObjectURL(file as Blob));
+987-      setPreviews(prev => [...prev, ...newPreviews]);
+988-    }
+989-  };
+990-
+991-  const removeImage = (index: number) => {
+992-    setImages(prev => prev.filter((_, i) => i !== index));
+993-    setPreviews(prev => prev.filter((_, i) => i !== index));
+994-  };
+995-
+996-  const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+997-    if (e.key === 'Enter') {
+998-      e.preventDefault();
+999-      const target = e.target as HTMLTextAreaElement;
+1000-      const start = target.selectionStart;
+1001-      const end = target.selectionEnd;
+1002-      const value = target.value;
+1003-      const newValue = value.substring(0, start) + "\n- " + value.substring(end);
+1004-      setFormData({ ...formData, description: newValue });
+1005-      setTimeout(() => { target.selectionStart = target.selectionEnd = start + 3; }, 0);
+1006-    }
+1007-  };
+1008-
+1009-  const navigate = useNavigate();
+1010-
+1011:  const handleSubmit = async (e: React.FormEvent) => {
+--
+1447-        >
+1448-          <h2 className="text-3xl md:text-5xl font-black text-forest uppercase tracking-tight mb-4 md:mb-6 font-heading">Créer une offre</h2>
+1449-          <p className="text-gray-500 font-medium text-sm md:text-lg">Rejoignez le réseau immobilier le plus prestigieux du Cameroun.</p>
+1450-        </motion.div>
+1451-
+1452-        <motion.div
+1453-          initial={{ opacity: 0, scale: 0.95 }}
+1454-          whileInView={{ opacity: 1, scale: 1 }}
+1455-          viewport={{ once: true, margin: "-100px" }}
+1456-        >
+1457-          <PropertyForm isAdmin={false} />
+1458-        </motion.div>
+1459-      </div>
+1460-    </section>
+1461-  );
+1462-};
+1463-
+1464-const PropertyRequestSection = () => {
+1465-  const [loading, setLoading] = useState(false);
+1466-  const [formData, setFormData] = useState({
+1467-    type: PROPERTY_TYPES[0],
+1468-    budgetMax: 50000000,
+1469-    cities: 'Douala',
+1470-    surfaceMin: 300,
+1471-    description: '',
+1472-    name: '',
+1473-    phone: '',
+1474-    email: ''
+1475-  });
+1476-
+1477:  const handleSubmit = async (e: React.FormEvent) => {
