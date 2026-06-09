@@ -1752,8 +1752,8 @@ const AdminPanel = ({
         const props = await api.getProperties();
         setProperties(props);
         setLoading(false);
-      } catch (error) {
-        toast.error("Erreur chargement propriétés");
+      } catch (error: any) {
+        toast.error("Erreur chargement propriétés: " + error.message);
         setLoading(false);
       }
     };
@@ -1763,8 +1763,8 @@ const AdminPanel = ({
       try {
         const reqs = await api.getRequests();
         setRequests(reqs);
-      } catch (error) {
-        toast.error("Erreur chargement requêtes");
+      } catch (error: any) {
+        toast.error("Erreur chargement requêtes: " + error.message);
       }
     };
 
