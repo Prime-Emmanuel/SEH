@@ -156,7 +156,14 @@ export const api = {
   async getRequests() {
     const db = requireSupabase();
     const { data, error } = await db.from('requests').select('*').order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.message.includes('created_at does not exist')) {
+         const { data: fallbackData, error: fbError } = await db.from('requests').select('*');
+         if (fbError) throw new Error(fbError.message);
+         return (fallbackData || []).map(mapRequestFromDB).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      }
+      throw new Error(error.message);
+    }
     return (data || []).map(mapRequestFromDB);
   },
 
@@ -164,7 +171,19 @@ export const api = {
     const db = requireSupabase();
     const payload = mapRequestToDB(data);
     const { error } = await db.from('requests').insert([payload]);
-    if (error) throw new Error(error.message);
+    if (error) {
+       if (error.message.includes('column') && error.message.includes('does not exist')) {
+          const { error: camelErr } = await db.from('requests').insert([{
+             ...data,
+             id: payload.id,
+             createdAt: payload.created_at,
+             updatedAt: payload.updated_at
+          }]);
+          if (camelErr) throw new Error(camelErr.message);
+       } else {
+         throw new Error(error.message);
+       }
+    }
 
     // Notify admin
     sendAdminNotification("Nouvelle demande de recherche", {
