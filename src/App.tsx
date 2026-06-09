@@ -2023,11 +2023,11 @@ const AdminPanel = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 lg:px-12 sticky top-0 z-40">
-          <div className="flex items-center gap-4">
-            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest font-space">
+        <header className="h-20 bg-white border-b border-slate-200 flex flex-shrink-0 items-center justify-between px-4 md:px-8 lg:px-12 sticky top-0 z-40">
+          <div className="flex items-center gap-4 truncate">
+            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest font-space truncate">
               {activeTab === 'dashboard' && "Dashboard Overview"}
               {activeTab === 'properties' && "Property Management"}
               {activeTab === 'create-offer' && "Créer une offre"}
@@ -2036,19 +2036,19 @@ const AdminPanel = ({
             </h2>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-shrink-0">
             <div className="hidden md:flex flex-col items-end">
               <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Admin Portal</span>
               <span className="text-[9px] font-bold text-slate-400">Admin</span>
             </div>
-            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
+            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 flex-shrink-0">
               <Users className="w-5 h-5 text-slate-400" />
             </div>
           </div>
         </header>
 
-        <div className="flex-1 p-8 lg:p-12 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">
+        <div className="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto overflow-x-hidden">
+          <div className="max-w-7xl mx-auto w-full">
         
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 mb-20">
@@ -2118,8 +2118,8 @@ const AdminPanel = ({
                   </div>
                   <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-gold hover:text-slate-900">Voir tout</Button>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
+                <CardContent className="p-0 overflow-x-auto">
+                  <Table className="min-w-[700px]">
                     <TableHeader className="bg-slate-50/50">
                       <TableRow className="border-slate-100">
                         <TableHead className="px-8 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400">Propriété</TableHead>
