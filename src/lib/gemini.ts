@@ -30,7 +30,20 @@ export const analyzeImageWithAI = async (base64Image: string, mimeType: string):
             }
           },
           {
-            text: "Analyse cette image de propriété immobilière. Retourne un objet JSON stricte avec: 'type' (ex: Terrain, Maison, Appartement), 'title' (un titre court et accrocheur), 'description' (une description attractive), 'characteristics' (un tableau de 3-4 caractéristiques clés). Ne retourne QUE du JSON."
+            text: `Analyse cette image d'une offre de propriété immobilière. Extrait toutes les informations suivantes si elles sont présentes et retourne-les au format JSON stricte :
+- 'type' (ex: Terrain, Maison, Appartement, etc. Laisse vide si non précisé)
+- 'title' (Génère un titre court et accrocheur comme "Terrain à Douala", ou utilise une information clé)
+- 'description' (Extrait tout le texte décrivant le bien. Formatte correctement)
+- 'characteristics' (Un tableau de strings extraites de la description, ex: ["Quartier viabilisé", "Vue sur crique"])
+- 'city' (Extrait uniquement le nom de la ville, ex: "Douala")
+- 'quarter' (Extrait le quartier, ex: "Bonapriso", "Bonabéri", "Dikolo")
+- 'surface' (Superficie sous forme de nombre entier, ex: 1100. N'inclut pas "m²")
+- 'totalPrice' (Le prix en nombre entier, ex: 88000000. Supprime les espaces et "FCFA")
+- 'ownerName' (Nom du créateur ou contact)
+- 'ownerPhone' (Numéro de téléphone sans espaces)
+- 'ownerEmail' (Email ou laisse vide si non trouvé)
+
+Ne retourne QUE du JSON sans markdown, strictement. Laisse null ou une chaine vide si l'info n'est pas trouvée.`
           }
         ]
       },

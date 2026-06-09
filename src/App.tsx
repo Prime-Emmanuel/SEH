@@ -830,13 +830,29 @@ const PropertyForm = ({ onSuccess, onCancel, isAdmin = false, initialData }: { o
         try {
           const result = await analyzeImageWithAI(reader.result as string, file.type);
           if (result) {
-            setFormData(prev => ({
-              ...prev,
-              type: result.type || prev.type,
-              title: result.title || prev.title,
-              description: result.description || prev.description,
-              characteristics: result.characteristics || prev.characteristics
-            }));
+            setFormData(prev => {
+              const newSurface = result.surface ? Number(result.surface) : prev.surface;
+              let newPricePerM2 = prev.pricePerM2;
+              
+              if (result.totalPrice && newSurface > 0) {
+                newPricePerM2 = Math.round(Number(result.totalPrice) / newSurface);
+              }
+
+              return {
+                ...prev,
+                type: result.type || prev.type,
+                title: result.title || prev.title,
+                description: result.description || prev.description,
+                characteristics: result.characteristics || prev.characteristics,
+                city: result.city || prev.city,
+                quarter: result.quarter || prev.quarter,
+                surface: newSurface,
+                pricePerM2: newPricePerM2,
+                ownerName: result.ownerName || prev.ownerName,
+                ownerPhone: result.ownerPhone || prev.ownerPhone,
+                ownerEmail: result.ownerEmail || prev.ownerEmail,
+              };
+            });
             toast.success("Image analysée par l'IA avec succès!");
           }
         } catch (error: any) {
