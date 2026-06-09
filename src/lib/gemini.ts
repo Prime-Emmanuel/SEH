@@ -14,7 +14,7 @@ export const analyzeImageWithAI = async (base64Image: string, mimeType: string, 
     // Remove the data:image/...;base64, prefix if it exists to pass pure base64 to Gemini
     const pureBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,7 +93,7 @@ export const generateDescriptionWithAI = async (prompt: string, retries = 2): Pr
       throw new Error("Clé API Gemini non configurée ! Veuillez la définir dans le Panel Admin.");
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
