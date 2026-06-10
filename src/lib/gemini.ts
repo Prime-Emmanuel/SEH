@@ -4,6 +4,37 @@
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+let cachedModel: string | null = null;
+
+async function getAvailableModel(apiKey: string): Promise<string> {
+  if (cachedModel) return cachedModel;
+  
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+  if (!response.ok) {
+    throw new Error("Clé API Invalide ou problème de connexion pour lister les modèles.");
+  }
+  
+  const data = await response.json();
+  const models = data.models || [];
+  
+  const supported = models.filter((m: any) => 
+    m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")
+  );
+  
+  const preferred = supported.find((m: any) => m.name.includes("gemini-1.5-flash")) ||
+                    supported.find((m: any) => m.name.includes("gemini-2.0-flash")) ||
+                    supported.find((m: any) => m.name.includes("gemini-1.5-pro")) ||
+                    supported.find((m: any) => m.name.includes("gemini-pro-vision")) ||
+                    supported.find((m: any) => m.name.includes("gemini"));
+
+  if (preferred) {
+    cachedModel = preferred.name;
+    return preferred.name;
+  }
+  
+  throw new Error("Votre clé API n'a accès à aucun modèle Gemini compatible.");
+}
+
 export const analyzeImageWithAI = async (base64Image: string, mimeType: string, retries = 2): Promise<any> => {
   try {
     const apiKey = localStorage.getItem('gemini_api_key');
@@ -14,7 +45,9 @@ export const analyzeImageWithAI = async (base64Image: string, mimeType: string, 
     // Remove the data:image/...;base64, prefix if it exists to pass pure base64 to Gemini
     const pureBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    const modelName = await getAvailableModel(apiKey);
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,7 +126,9 @@ export const generateDescriptionWithAI = async (prompt: string, retries = 2): Pr
       throw new Error("Clé API Gemini non configurée ! Veuillez la définir dans le Panel Admin.");
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    const modelName = await getAvailableModel(apiKey);
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
